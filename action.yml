@@ -11,6 +11,21 @@ inputs:
   github_token:
     description: 'GITHUB_TOKEN'
     default: '${{ github.token }}'
+  policy_file:
+    description: >
+      Path to file containing shadow policy.
+
+      If set, sq-git will use the policy at the specified path
+      instead of the default.
+    required: false
+  checkout_submodules:
+    description: 'Whether to check out submodules.'
+    required: false
+    default: false
+  checkout_ssh_key:
+    description: 'SSH key to use for checking out (submodules)'
+    required: false
+
   comment:
     description: >
       Whether to post a comment.
@@ -46,6 +61,8 @@ runs:
         # But checkout the target, not the pull request.
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
+        submodules: ${{ inputs.checkout_submodules }}
+        ssh-key: ${{ inputs.checkout_ssh_key }}
 
     - run: |
         # As of now (2023-09), GitHub executes `docker run` with the
@@ -88,6 +105,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         BASE_SHA: ${{ github.event.pull_request.base.sha }}
         HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        POLICY_FILE: ${{ inputs.policy_file }}
       with:
         entrypoint: '/bin/bash'
         args: |

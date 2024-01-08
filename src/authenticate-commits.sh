@@ -32,9 +32,18 @@ echo ::group::sq-git policy describe
 SQ_GIT_POLICY=$RESULTS/sq-git-policy-describe.json
 SQ_GIT_POLICY_STDERR=$RESULTS/sq-git-policy-describe.err
 
-sq-git policy describe \
-       2>$SQ_GIT_POLICY_STDERR \
-       | tee -a $SQ_GIT_POLICY
+# $POLICY_FILE is set, specify policy file for sq-git
+if [[ ! -z "${POLICY_FILE}" ]]; then
+        sq-git --policy-file $GITHUB_WORKSPACE/$POLICY_FILE \
+                policy describe \
+                2>$SQ_GIT_POLICY_STDERR \
+                | tee -a $SQ_GIT_POLICY
+# $POLICY_FILE is not set, use default
+else
+        sq-git policy describe \
+                2>$SQ_GIT_POLICY_STDERR \
+                | tee -a $SQ_GIT_POLICY
+fi
 echo; echo ::endgroup::
 
 echo ::group::sq-git log
@@ -43,9 +52,17 @@ SQ_GIT_LOG=$RESULTS/sq-git-log.json
 SQ_GIT_LOG_STDERR=$RESULTS/sq-git-log.err
 SQ_GIT_LOG_EXIT_CODE=$RESULTS/sq-git-log.ec
 
-sq-git log --output-format=json --keep-going \
-       --trust-root "$BASE_SHA" "$HEAD_SHA" \
-       2>$SQ_GIT_LOG_STDERR \
-       | tee -a $SQ_GIT_LOG
+if [[ ! -z "${POLICY_FILE}" ]]; then
+        sq-git --policy-file $GITHUB_WORKSPACE/$POLICY_FILE \
+                log --output-format=json --keep-going \
+                --trust-root "$BASE_SHA" "$HEAD_SHA" \
+                2>$SQ_GIT_LOG_STDERR \
+                | tee -a $SQ_GIT_LOG
+else
+        sq-git log --output-format=json --keep-going \
+                --trust-root "$BASE_SHA" "$HEAD_SHA" \
+                2>$SQ_GIT_LOG_STDERR \
+                | tee -a $SQ_GIT_LOG
+fi
 printf "${PIPESTATUS[0]}" > $SQ_GIT_LOG_EXIT_CODE
 echo; echo ::endgroup::
